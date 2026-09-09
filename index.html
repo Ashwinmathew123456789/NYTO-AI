@@ -197,7 +197,6 @@
 
   <script>
     async function sendMessage() {
-      const apiKey = "AQ.Ab8RN6LOVHUPkboLftjScgjtbYF5eT9EahlpY18rsbDJ4-Kv1g";
       const userInput = document.getElementById('userInput');
       const chatBox = document.getElementById('chatBox');
       const messageText = userInput.value.trim();
@@ -211,33 +210,25 @@
       chatBox.scrollTop = chatBox.scrollHeight;
 
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+        // Calls your Cloudflare Worker proxy — no API key lives in this file.
+        const PROXY_URL = "https://nytoai.ashwinmathew56.workers.dev";
 
-        const response = await fetch(url, {
+        const response = await fetch(PROXY_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{ text: "You are NYTO AI. You must ALWAYS respond exclusively in English, regardless of the input language or user region." }]
-            },
-            contents: [{
-              parts: [{
-                text: messageText
-              }]
-            }]
-          })
+          body: JSON.stringify({ message: messageText })
         });
 
         const data = await response.json();
 
         if (data.error) {
-          throw new Error(data.error.message);
+          throw new Error(data.error);
         }
 
-        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-          let botText = data.candidates[0].content.parts[0].text;
+        if (data.text) {
+          let botText = data.text;
           botText = botText.replace(/google/gi, "Nyto");
 
           if (document.getElementById('loading')) document.getElementById('loading').remove();
