@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Correspondence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #efe8d8;
+      --paper-dark: #e4dabd;
+      --ink: #26241f;
+      --ink-soft: #6b6455;
+      --rule: #c9bd9c;
+      --stamp: #a23b2e;
+      --stamp-soft: #c96a58;
+      --error: #8b2c1f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--paper-dark);
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(38,36,31,0.03) 0, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(38,36,31,0.04) 0, transparent 45%);
+      font-family: 'Source Serif 4', Georgia, serif;
+      color: var(--ink);
+    }
+
+    .sheet {
+      width: 100%;
+      max-width: 460px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px rgba(38,36,31,0.18);
+      position: relative;
+    }
+
+    .sheet::before {
+      content: "";
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 6px;
+      background-image: radial-gradient(circle, var(--paper-dark) 2.5px, transparent 2.6px);
+      background-size: 16px 6px;
+      background-repeat: repeat-x;
+      background-position: 6px center;
+    }
+
+    header {
+      padding: 22px 28px 16px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    header .title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    header .stamp {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--stamp);
+      border: 1px solid var(--stamp-soft);
+      padding: 3px 7px;
+      border-radius: 2px;
+      transform: rotate(-3deg);
+      letter-spacing: 0.06em;
+    }
+
+    #chatBox {
+      height: 380px;
+      overflow-y: auto;
+      padding: 22px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 30px,
+        var(--rule) 31px
+      );
+      background-position: 0 8px;
+    }
+
+    #chatBox::-webkit-scrollbar { width: 6px; }
+    #chatBox::-webkit-scrollbar-track { background: transparent; }
+    #chatBox::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 6px; }
+
+    p {
+      margin: 0;
+      font-size: 0.98rem;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    p b {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    p.user-msg { color: var(--ink); }
+    p.user-msg b { color: var(--ink-soft); }
+
+    p.bot-msg { color: var(--ink); padding-left: 14px; border-left: 2px solid var(--stamp-soft); }
+    p.bot-msg b { color: var(--stamp); }
+
+    p.error-msg {
+      padding-left: 14px;
+      border-left: 2px solid var(--error);
+      color: var(--error);
+      font-style: italic;
+    }
+    p.error-msg b { color: var(--error); }
+
+    #loading b { color: var(--stamp); }
+    #loading { opacity: 0.65; }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 24px 20px;
+      border-top: 1px solid var(--rule);
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px 12px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--rule);
+      color: var(--ink);
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 0.98rem;
+      outline: none;
+    }
+
+    input[type="text"]::placeholder { color: var(--ink-soft); font-style: italic; }
+    input[type="text"]:focus { border-bottom-color: var(--stamp); }
+
+    button {
+      padding: 10px 18px;
+      background: var(--ink);
+      border: none;
+      color: var(--paper);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: var(--stamp); }
+    button:active { transform: translateY(1px); }
+
+    @media (max-width: 500px) {
+      .sheet { max-width: 100%; margin: 0 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sheet">
+    <header>
+      <span class="title">NYTO AI</span>
+      <span class="stamp">NYTO AI</span>
+    </header>
+
+    <div id="chatBox">
+      <p class="bot-msg"><b>NYTO AI</b>Hello! Type your message below and chat.</p>
+    </div>
+
+    <div class="input-row">
+      <input type="text" id="userInput" placeholder="write here..." onkeypress="if(event.key === 'Enter') sendMessage()">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const apiKey = "AQ.Ab8RN6KOuDWjvSsbeL1fET1XWob9-hww4YxqtNSkQ6v1SlVeIA";
+      const userInput = document.getElementById('userInput');
+      const chatBox = document.getElementById('chatBox');
+      const messageText = userInput.value.trim();
+
+      if (!messageText) return;
+
+      chatBox.innerHTML += `<p class="user-msg"><b>You:</b> ${messageText}</p>`;
+      userInput.value = '';
+
+      chatBox.innerHTML += `<p id="loading" class="bot-msg"><b>NITO AI:</b> Thinking...</p>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: "You are NYTO AI. You must ALWAYS respond exclusively in English, regardless of the input language or user region." }]
+            },
+            contents: [{
+              parts: [{
+                text: messageText
+              }]
+            }]
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error.message);
+        }
+
+        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+          let botText = data.candidates[0].content.parts[0].text;
+          botText = botText.replace(/google/gi, "Nyto");
+
+          if (document.getElementById('loading')) document.getElementById('loading').remove();
+          chatBox.innerHTML += `<p class="bot-msg"><b>NYTO AI:</b> ${botText}</p>`;
+        } else {
+          throw new Error("Invalid response format received from API.");
+        }
+
+      } catch (error) {
+        if (document.getElementById('loading')) document.getElementById('loading').remove();
+        chatBox.innerHTML += `<p class="error-msg"><b>Error:</b> ${error.message}</p>`;
+        console.error(error);
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>
