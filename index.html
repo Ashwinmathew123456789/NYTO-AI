@@ -9,48 +9,44 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #eef0f3;
-      --panel: #ffffff;
-      --ink: #191d24;
-      --ink-soft: #626b79;
-      --ink-faint: #9aa2ad;
-      --line: #dde1e7;
-      --line-strong: #c3c9d2;
-      --accent: #33508f;
-      --accent-hover: #294178;
-      --accent-tint: #e9edf7;
-      --error: #a3402f;
-      --error-tint: #f7e9e6;
-      --code-bg: #191d24;
+      --bg: #0e0e10;
+      --surface: #171719;
+      --pill: #1e1f22;
+      --line: #2a2b2e;
+      --ink: #ececec;
+      --ink-soft: #9a9ba0;
+      --ink-faint: #6d6e73;
+      --accent: #2f6fed;
+      --accent-hover: #4c82ef;
+      --user-bubble: #22427f;
+      --error: #e5a397;
+      --error-tint: #2c1c19;
+      --code-bg: #0a0a0b;
       --code-fg: #e4e7ec;
-      --code-header: #262b34;
-      --radius: 3px;
+      --code-header: #1c1d20;
     }
 
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme: light) {
       :root {
-        --bg: #14161b;
-        --panel: #1b1e25;
-        --ink: #e7e9ed;
-        --ink-soft: #9aa2ad;
-        --ink-faint: #6b7280;
-        --line: #2a2e37;
-        --line-strong: #3a3f4a;
-        --accent: #6d8fd6;
-        --accent-hover: #7fa0e3;
-        --accent-tint: #232a3d;
-        --error: #e08a78;
-        --error-tint: #33221f;
-        --code-bg: #0d0e12;
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --pill: #f3f4f6;
+        --line: #e6e7eb;
+        --ink: #111318;
+        --ink-soft: #6b6d74;
+        --ink-faint: #9a9ba3;
+        --accent: #2f6fed;
+        --accent-hover: #1f5adb;
+        --user-bubble: #2f6fed;
+        --error: #a3402f;
+        --error-tint: #fbecea;
+        --code-bg: #14161b;
         --code-fg: #e4e7ec;
-        --code-header: #1a1c22;
+        --code-header: #1e2027;
       }
-
-      button.send-btn { color: #101218; }
-      .msg.from-user { color: #101218; }
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
       margin: 0;
@@ -66,120 +62,148 @@
     .panel {
       width: 100%;
       max-width: 460px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      box-shadow: 0 12px 32px rgba(25, 29, 36, 0.10);
+      height: 780px;
+      max-height: 92vh;
+      background: var(--bg);
       display: flex;
       flex-direction: column;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
     }
 
     header {
-      padding: 18px 24px;
-      border-bottom: 1px solid var(--line);
+      padding: 18px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
     header .name {
-      font-size: 0.98rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    header .status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.72rem;
+      font-size: 0.92rem;
+      font-weight: 500;
       color: var(--ink-soft);
     }
 
-    header .status .dot {
+    #chatBox {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    #chatBox::-webkit-scrollbar { width: 5px; }
+    #chatBox::-webkit-scrollbar-track { background: transparent; }
+    #chatBox::-webkit-scrollbar-thumb { background: var(--line); border-radius: 6px; }
+
+    .msg-row { display: flex; flex-direction: column; }
+
+    .msg-row {
+      animation: msg-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes msg-rise {
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .typing-dots {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 0;
+    }
+
+    .typing-dots span {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #2e8b57;
+      background: var(--ink-faint);
+      animation: typing-bounce 1.1s ease-in-out infinite;
     }
 
-    #chatBox {
-      height: 380px;
-      overflow-y: auto;
-      padding: 20px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+    .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes typing-bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+      30% { transform: translateY(-4px); opacity: 1; }
     }
 
-    #chatBox::-webkit-scrollbar { width: 6px; }
-    #chatBox::-webkit-scrollbar-track { background: transparent; }
-    #chatBox::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 6px; }
+    @media (prefers-reduced-motion: reduce) {
+      .msg-row { animation: none; }
+      .typing-dots span { animation: none; opacity: 0.8; }
+    }
 
-    .msg {
+    .msg-row.from-user { align-items: flex-end; }
+    .msg-row.from-bot, .msg-row.is-error { align-items: flex-start; }
+
+    .bubble {
       max-width: 82%;
-      font-size: 0.93rem;
+      font-size: 0.96rem;
       line-height: 1.5;
-      padding: 9px 13px;
-      border-radius: 14px;
     }
 
-    .msg .who {
-      font-size: 0.66rem;
-      font-weight: 500;
-      margin-bottom: 3px;
-      opacity: 0.75;
-    }
-
-    .msg.from-user {
-      align-self: flex-end;
-      background: var(--accent);
+    .msg-row.from-user .bubble {
+      background: var(--user-bubble);
       color: #fff;
-      border-bottom-right-radius: 4px;
+      padding: 10px 15px;
+      border-radius: 18px 18px 4px 18px;
     }
 
-    .msg.from-bot {
-      align-self: flex-start;
-      background: var(--bg);
-      border: 1px solid var(--line);
+    .msg-row.from-bot .bubble {
       color: var(--ink);
-      border-bottom-left-radius: 4px;
+      padding: 2px 0;
     }
 
-    .msg.from-bot .who { color: var(--accent); opacity: 1; }
-
-    .msg.is-error {
-      align-self: flex-start;
+    .msg-row.is-error .bubble {
       background: var(--error-tint);
-      border: 1px solid var(--error);
       color: var(--error);
-      border-bottom-left-radius: 4px;
+      padding: 10px 15px;
+      border-radius: 18px 18px 18px 4px;
     }
 
-    .msg.is-error .who { color: var(--error); opacity: 1; }
+    #loading .bubble { color: var(--ink-faint); }
 
-    /* code blocks sit inside a bot bubble, so give them their own contrast frame */
-    .msg.from-bot .code-block,
-    .msg.is-error .code-block {
-      margin: 6px -13px;
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
     }
-    .msg.from-bot .code-block:first-child,
-    .msg.is-error .code-block:first-child { margin-top: 2px; }
 
-    #loading .who { color: var(--accent); }
-    #loading { opacity: 0.6; }
+    .actions button {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: var(--ink-faint);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .actions button:hover { background: var(--surface); color: var(--ink-soft); }
+    .actions button.active { color: var(--accent); }
+    .actions button svg { width: 15px; height: 15px; }
 
     code.inline-code {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.85em;
-      background: var(--accent-tint);
+      background: var(--surface);
       border-radius: 3px;
       padding: 1px 5px;
     }
 
     .code-block {
       margin: 8px 0;
-      border-radius: 5px;
+      border-radius: 8px;
       overflow: hidden;
       text-align: left;
     }
@@ -197,7 +221,7 @@
 
     .copy-btn {
       background: transparent;
-      border: 1px solid #454c59;
+      border: 1px solid #3a3b3f;
       color: var(--code-fg);
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.64rem;
@@ -207,7 +231,7 @@
       transition: background 0.15s, border-color 0.15s;
     }
 
-    .copy-btn:hover { border-color: var(--accent); background: rgba(51,80,143,0.25); }
+    .copy-btn:hover { border-color: var(--accent); background: rgba(47,111,237,0.2); }
     .copy-btn.copied { background: var(--accent); border-color: var(--accent); color: #fff; }
 
     .code-block pre {
@@ -221,88 +245,79 @@
       line-height: 1.5;
     }
 
-    .input-row {
+    .input-bar {
+      flex-shrink: 0;
+      padding: 10px 14px 16px;
+    }
+
+    .input-pill {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 14px 20px 18px;
-      border-top: 1px solid var(--line);
+      gap: 6px;
+      background: var(--pill);
+      border-radius: 26px;
+      padding: 6px 6px 6px 16px;
     }
 
     input[type="text"] {
       flex: 1;
-      padding: 10px 12px;
-      background: var(--bg);
-      border: 1px solid var(--line);
-      border-radius: 4px;
+      background: transparent;
+      border: none;
       color: var(--ink);
       font-family: 'IBM Plex Sans', sans-serif;
-      font-size: 0.92rem;
+      font-size: 0.95rem;
       outline: none;
-      transition: border-color 0.15s;
+      padding: 8px 0;
     }
 
     input[type="text"]::placeholder { color: var(--ink-faint); }
-    input[type="text"]:focus { border-color: var(--accent); }
 
-    button.send-btn {
-      padding: 10px 16px;
-      background: var(--accent);
-      border: none;
-      border-radius: 4px;
-      color: #fff;
-      font-family: 'IBM Plex Sans', sans-serif;
-      font-size: 0.86rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    button.send-btn:hover { background: var(--accent-hover); }
-    button.send-btn:active { transform: translateY(1px); }
-
-    button.mic-btn {
+    .round-btn {
       width: 38px;
       height: 38px;
       flex-shrink: 0;
-      padding: 0;
-      background: var(--bg);
-      border: 1px solid var(--line);
-      border-radius: 4px;
-      color: var(--ink-soft);
-      cursor: pointer;
+      border-radius: 50%;
+      border: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
     }
 
-    button.mic-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .round-btn.ghost {
+      background: transparent;
+      color: var(--ink-soft);
+    }
+    .round-btn.ghost:hover { color: var(--ink); }
 
-    button.mic-btn.listening {
-      background: var(--error-tint);
-      border-color: var(--error);
+    .round-btn.ghost.listening {
       color: var(--error);
       animation: pulse 1.4s ease-in-out infinite;
     }
 
-    button.mic-btn svg { width: 17px; height: 17px; }
+    .round-btn.solid {
+      background: var(--accent);
+      color: #fff;
+    }
+    .round-btn.solid:hover { background: var(--accent-hover); }
+    .round-btn.solid:active { transform: scale(0.94); }
+
+    .round-btn svg { width: 18px; height: 18px; }
 
     @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(163,64,47,0.25); }
-      50% { box-shadow: 0 0 0 5px rgba(163,64,47,0.05); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(229,163,151,0.25); }
+      50% { box-shadow: 0 0 0 6px rgba(229,163,151,0.06); }
     }
 
     .voice-note {
       font-size: 0.68rem;
       color: var(--ink-faint);
-      padding: 0 20px 12px;
-      margin-top: -8px;
+      padding: 4px 16px 0;
     }
 
     @media (max-width: 500px) {
-      .panel { max-width: 100%; margin: 0 10px; border-radius: 0; height: 100vh; }
-      #chatBox { height: auto; flex: 1; }
+      .panel { max-width: 100%; height: 100vh; max-height: 100vh; border-radius: 0; }
     }
   </style>
 </head>
@@ -311,25 +326,26 @@
   <div class="panel">
     <header>
       <span class="name">NYTO AI</span>
-      <span class="status"><span class="dot"></span>Ready</span>
     </header>
 
     <div id="chatBox">
-      <div class="msg from-bot"><div class="who">NYTO AI</div>Hello. Type a message below to get started.</div>
+      <div class="msg-row from-bot">
+        <div class="bubble">Hai! 👋<br>How are you doing? What are we working on today?</div>
+      </div>
     </div>
 
-    <div class="input-row">
-      <input type="text" id="userInput" placeholder="Write a message…" onkeypress="if(event.key === 'Enter') sendMessage()">
-      <button class="mic-btn" id="micBtn" onclick="toggleVoiceInput()" title="Speak your message" aria-label="Voice input">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-          <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
-          <line x1="12" y1="18" x2="12" y2="22"></line>
-        </svg>
-      </button>
-      <button class="send-btn" onclick="sendMessage()">Send</button>
+    <div class="input-bar">
+      <div class="input-pill">
+        <input type="text" id="userInput" placeholder="Message NYTO AI…" onkeypress="if(event.key === 'Enter') sendMessage()" oninput="refreshSendButton()">
+        <button class="round-btn ghost" id="micBtn" onclick="toggleVoiceInput()" title="Speak your message" aria-label="Voice input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="18" x2="12" y2="22"></line></svg>
+        </button>
+        <button class="round-btn solid" id="sendBtn" onclick="sendMessage()" aria-label="Send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </button>
+      </div>
+      <div class="voice-note" id="voiceNote" style="display:none;">Voice input isn't supported in this browser — try Chrome on desktop or Android.</div>
     </div>
-    <div class="voice-note" id="voiceNote" style="display:none;">Voice input isn't supported in this browser — try Chrome on desktop or Android.</div>
   </div>
 
   <script>
@@ -339,10 +355,8 @@
     let isListening = false;
 
     if (!SpeechRecognitionAPI) {
-      document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('micBtn').disabled = true;
-        document.getElementById('voiceNote').style.display = 'block';
-      });
+      document.getElementById('micBtn').disabled = true;
+      document.getElementById('voiceNote').style.display = 'block';
     } else {
       recognizer = new SpeechRecognitionAPI();
       recognizer.continuous = false;
@@ -357,8 +371,8 @@
           if (event.results[i].isFinal) finalText += transcript;
           else interimText += transcript;
         }
-        const input = document.getElementById('userInput');
-        input.value = (finalText || interimText).trim();
+        document.getElementById('userInput').value = (finalText || interimText).trim();
+        refreshSendButton();
       };
 
       recognizer.onerror = () => stopListening();
@@ -383,20 +397,17 @@
       recognizer.start();
     }
 
+    function refreshSendButton() {
+      const hasText = document.getElementById('userInput').value.trim().length > 0;
+      document.getElementById('sendBtn').style.opacity = hasText ? '1' : '0.5';
+    }
+
     let codeBlockCounter = 0;
 
     function escapeHtml(str) {
-      return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    // Turns plain/markdown-ish text into formatted HTML:
-    // ```lang\ncode``` -> code block with copy button
-    // `code` -> inline code
-    // **bold** -> <strong>
-    // \n -> <br>
     function formatText(rawText) {
       let text = escapeHtml(rawText);
 
@@ -426,14 +437,40 @@
         const original = btn.textContent;
         btn.textContent = 'Copied';
         btn.classList.add('copied');
-        setTimeout(() => {
-          btn.textContent = original;
-          btn.classList.remove('copied');
-        }, 1500);
+        setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1500);
       } catch (err) {
         btn.textContent = 'Failed';
         setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
       }
+    }
+
+    async function copyMessage(btn, text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 1200);
+      } catch (err) { /* clipboard unavailable */ }
+    }
+
+    function toggleRating(btn, group) {
+      const row = btn.closest('.actions');
+      row.querySelectorAll(`[data-group="${group}"]`).forEach(b => { if (b !== btn) b.classList.remove('active'); });
+      btn.classList.toggle('active');
+    }
+
+    function buildActionRow(rawText) {
+      const safeText = rawText.replace(/'/g, "\\'").replace(/\n/g, '\\n');
+      return `<div class="actions">
+        <button title="Copy" onclick="copyMessage(this, '${safeText}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <button title="Good response" data-group="rate" onclick="toggleRating(this, 'rate')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z"></path><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+        </button>
+        <button title="Bad response" data-group="rate" onclick="toggleRating(this, 'rate')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10Z"></path><path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>
+        </button>
+      </div>`;
     }
 
     async function sendMessage() {
@@ -444,11 +481,12 @@
       if (!messageText) return;
 
       chatBox.insertAdjacentHTML('beforeend',
-        `<div class="msg from-user"><div class="who">You</div>${escapeHtml(messageText).replace(/\n/g, '<br>')}</div>`);
+        `<div class="msg-row from-user"><div class="bubble">${escapeHtml(messageText).replace(/\n/g, '<br>')}</div></div>`);
       userInput.value = '';
+      refreshSendButton();
 
       chatBox.insertAdjacentHTML('beforeend',
-        `<div class="msg from-bot" id="loading"><div class="who">NYTO AI</div>Thinking…</div>`);
+        `<div class="msg-row from-bot" id="loading"><div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`);
       chatBox.scrollTop = chatBox.scrollHeight;
 
       try {
@@ -462,7 +500,6 @@
         });
 
         const data = await response.json();
-
         if (data.error) throw new Error(data.error);
 
         if (data.text) {
@@ -473,7 +510,7 @@
           const loadingEl = document.getElementById('loading');
           if (loadingEl) loadingEl.remove();
           chatBox.insertAdjacentHTML('beforeend',
-            `<div class="msg from-bot"><div class="who">NYTO AI</div>${formatted}</div>`);
+            `<div class="msg-row from-bot"><div class="bubble">${formatted}</div>${buildActionRow(botText)}</div>`);
         } else {
           throw new Error("Invalid response format received from API.");
         }
@@ -482,12 +519,14 @@
         const loadingEl = document.getElementById('loading');
         if (loadingEl) loadingEl.remove();
         chatBox.insertAdjacentHTML('beforeend',
-          `<div class="msg is-error"><div class="who">Error</div>${escapeHtml(error.message)}</div>`);
+          `<div class="msg-row is-error"><div class="bubble">${escapeHtml(error.message)}</div></div>`);
         console.error(error);
       }
 
       chatBox.scrollTop = chatBox.scrollHeight;
     }
+
+    refreshSendButton();
   </script>
 
 </body>
