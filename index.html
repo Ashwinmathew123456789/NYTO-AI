@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NYTO AI</title>
+  <meta name="description" content="NYTO AI — a fast, private chat assistant.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -11,6 +12,7 @@
     :root {
       --bg: #0e0e10;
       --surface: #171719;
+      --surface-2: #1e1f22;
       --pill: #1e1f22;
       --line: #2a2b2e;
       --ink: #ececec;
@@ -24,26 +26,33 @@
       --code-bg: #0a0a0b;
       --code-fg: #e4e7ec;
       --code-header: #1c1d20;
+      --overlay: rgba(0,0,0,0.55);
+      /* syntax */
+      --syn-key: #7aa2f7;
+      --syn-str: #9ece6a;
+      --syn-num: #ff9e64;
+      --syn-com: #565f89;
+      --syn-fn: #7dcfff;
     }
 
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg: #ffffff;
-        --surface: #ffffff;
-        --pill: #f3f4f6;
-        --line: #e6e7eb;
-        --ink: #111318;
-        --ink-soft: #6b6d74;
-        --ink-faint: #9a9ba3;
-        --accent: #2f6fed;
-        --accent-hover: #1f5adb;
-        --user-bubble: #2f6fed;
-        --error: #a3402f;
-        --error-tint: #fbecea;
-        --code-bg: #14161b;
-        --code-fg: #e4e7ec;
-        --code-header: #1e2027;
-      }
+    html[data-theme="light"] {
+      --bg: #ffffff;
+      --surface: #f7f8fa;
+      --surface-2: #f0f1f4;
+      --pill: #f3f4f6;
+      --line: #e6e7eb;
+      --ink: #111318;
+      --ink-soft: #6b6d74;
+      --ink-faint: #9a9ba3;
+      --accent: #2f6fed;
+      --accent-hover: #1f5adb;
+      --user-bubble: #2f6fed;
+      --error: #a3402f;
+      --error-tint: #fbecea;
+      --code-bg: #14161b;
+      --code-fg: #e4e7ec;
+      --code-header: #1e2027;
+      --overlay: rgba(20,22,27,0.35);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -57,9 +66,11 @@
       background: var(--bg);
       font-family: 'IBM Plex Sans', -apple-system, sans-serif;
       color: var(--ink);
+      transition: background 0.25s, color 0.25s;
     }
 
     .panel {
+      position: relative;
       width: 100%;
       max-width: 460px;
       height: 780px;
@@ -73,35 +84,58 @@
     }
 
     header {
-      padding: 18px;
-      display: flex;
+      padding: 12px 12px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
-      justify-content: center;
+      gap: 8px;
       flex-shrink: 0;
+      border-bottom: 1px solid var(--line);
     }
 
     header .name {
       font-size: 0.92rem;
-      font-weight: 500;
-      color: var(--ink-soft);
+      font-weight: 600;
+      color: var(--ink);
+      text-align: center;
+      letter-spacing: 0.02em;
     }
+
+    .head-group { display: flex; align-items: center; gap: 2px; }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: transparent;
+      color: var(--ink-soft);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .icon-btn:hover { background: var(--surface); color: var(--ink); }
+    .icon-btn svg { width: 18px; height: 18px; }
 
     #chatBox {
       flex: 1;
       overflow-y: auto;
-      padding: 8px 18px 18px;
+      padding: 18px 18px 8px;
       display: flex;
       flex-direction: column;
       gap: 22px;
+      scroll-behavior: smooth;
     }
 
     #chatBox::-webkit-scrollbar { width: 5px; }
     #chatBox::-webkit-scrollbar-track { background: transparent; }
     #chatBox::-webkit-scrollbar-thumb { background: var(--line); border-radius: 6px; }
 
-    .msg-row { display: flex; flex-direction: column; }
-
     .msg-row {
+      display: flex;
+      flex-direction: column;
       animation: msg-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -110,21 +144,12 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .typing-dots {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 0;
-    }
-
+    .typing-dots { display: flex; align-items: center; gap: 4px; padding: 4px 0; }
     .typing-dots span {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
+      width: 6px; height: 6px; border-radius: 50%;
       background: var(--ink-faint);
       animation: typing-bounce 1.1s ease-in-out infinite;
     }
-
     .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
     .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
 
@@ -133,19 +158,25 @@
       30% { transform: translateY(-4px); opacity: 1; }
     }
 
+    .cursor-blink::after {
+      content: '▋';
+      color: var(--ink-faint);
+      margin-left: 1px;
+      animation: blink 1s steps(2) infinite;
+    }
+    @keyframes blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
+
     @media (prefers-reduced-motion: reduce) {
       .msg-row { animation: none; }
       .typing-dots span { animation: none; opacity: 0.8; }
+      #chatBox { scroll-behavior: auto; }
+      .cursor-blink::after { animation: none; }
     }
 
     .msg-row.from-user { align-items: flex-end; }
     .msg-row.from-bot, .msg-row.is-error { align-items: flex-start; }
 
-    .bubble {
-      max-width: 82%;
-      font-size: 0.96rem;
-      line-height: 1.5;
-    }
+    .bubble { max-width: 88%; font-size: 0.96rem; line-height: 1.55; word-wrap: break-word; }
 
     .msg-row.from-user .bubble {
       background: var(--user-bubble);
@@ -153,156 +184,149 @@
       padding: 10px 15px;
       border-radius: 18px 18px 4px 18px;
     }
-
-    .msg-row.from-bot .bubble {
-      color: var(--ink);
-      padding: 2px 0;
-    }
-
+    .msg-row.from-bot .bubble { color: var(--ink); padding: 2px 0; }
     .msg-row.is-error .bubble {
       background: var(--error-tint);
       color: var(--error);
       padding: 10px 15px;
       border-radius: 18px 18px 18px 4px;
     }
-
     #loading .bubble { color: var(--ink-faint); }
 
-    .actions {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 6px;
+    /* markdown */
+    .bubble h1, .bubble h2, .bubble h3 { margin: 0.6em 0 0.3em; line-height: 1.3; }
+    .bubble h1 { font-size: 1.25rem; }
+    .bubble h2 { font-size: 1.12rem; }
+    .bubble h3 { font-size: 1.02rem; }
+    .bubble p { margin: 0.4em 0; }
+    .bubble ul, .bubble ol { margin: 0.4em 0; padding-left: 1.3em; }
+    .bubble li { margin: 0.2em 0; }
+    .bubble a { color: var(--accent); text-decoration: underline; }
+    .bubble blockquote {
+      margin: 0.5em 0; padding: 2px 12px;
+      border-left: 3px solid var(--line); color: var(--ink-soft);
     }
+    .bubble hr { border: none; border-top: 1px solid var(--line); margin: 0.8em 0; }
 
+    .actions { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
     .actions button {
-      width: 28px;
-      height: 28px;
-      border: none;
-      background: transparent;
-      color: var(--ink-faint);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+      width: 28px; height: 28px; border: none; background: transparent;
+      color: var(--ink-faint); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
     }
-
     .actions button:hover { background: var(--surface); color: var(--ink-soft); }
     .actions button.active { color: var(--accent); }
     .actions button svg { width: 15px; height: 15px; }
 
     code.inline-code {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.85em;
-      background: var(--surface);
-      border-radius: 3px;
-      padding: 1px 5px;
+      font-size: 0.85em; background: var(--surface-2);
+      border-radius: 3px; padding: 1px 5px;
     }
 
-    .code-block {
-      margin: 8px 0;
-      border-radius: 8px;
-      overflow: hidden;
-      text-align: left;
-    }
-
+    .code-block { margin: 8px 0; border-radius: 8px; overflow: hidden; text-align: left; }
     .code-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--code-header);
-      padding: 6px 10px;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.66rem;
-      color: var(--ink-faint);
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--code-header); padding: 6px 10px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; color: var(--ink-faint);
     }
-
     .copy-btn {
-      background: transparent;
-      border: 1px solid #3a3b3f;
-      color: var(--code-fg);
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.64rem;
-      padding: 3px 9px;
-      border-radius: 3px;
-      cursor: pointer;
+      background: transparent; border: 1px solid #3a3b3f; color: var(--code-fg);
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.64rem;
+      padding: 3px 9px; border-radius: 3px; cursor: pointer;
       transition: background 0.15s, border-color 0.15s;
     }
-
     .copy-btn:hover { border-color: var(--accent); background: rgba(47,111,237,0.2); }
     .copy-btn.copied { background: var(--accent); border-color: var(--accent); color: #fff; }
-
     .code-block pre {
-      margin: 0;
-      background: var(--code-bg);
-      color: var(--code-fg);
-      padding: 12px;
-      overflow-x: auto;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.8rem;
-      line-height: 1.5;
+      margin: 0; background: var(--code-bg); color: var(--code-fg);
+      padding: 12px; overflow-x: auto;
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; line-height: 1.55;
     }
+    .tok-key { color: var(--syn-key); }
+    .tok-str { color: var(--syn-str); }
+    .tok-num { color: var(--syn-num); }
+    .tok-com { color: var(--syn-com); font-style: italic; }
+    .tok-fn  { color: var(--syn-fn); }
 
-    .input-bar {
-      flex-shrink: 0;
-      padding: 10px 14px 16px;
-    }
-
-    .input-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--pill);
-      border-radius: 26px;
-      padding: 6px 6px 6px 16px;
-    }
-
-    input[type="text"] {
+    /* ===== Landing / empty-state screen ===== */
+    .landing {
       flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--ink);
-      font-family: 'IBM Plex Sans', sans-serif;
-      font-size: 0.95rem;
-      outline: none;
-      padding: 8px 0;
-    }
-
-    input[type="text"]::placeholder { color: var(--ink-faint); }
-
-    .round-btn {
-      width: 38px;
-      height: 38px;
-      flex-shrink: 0;
-      border-radius: 50%;
-      border: none;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
+      text-align: center;
+      padding: 24px 18px;
+      gap: 6px;
+      animation: msg-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .landing-logo {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--accent); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1.2rem; margin-bottom: 10px;
+    }
+    .landing-kicker {
+      font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--ink-faint); margin-bottom: 10px;
+    }
+    .landing-title {
+      font-size: 1.5rem; font-weight: 600; line-height: 1.3; margin: 0;
+      color: var(--ink);
+    }
+    .landing-title.soft { color: var(--ink-soft); font-weight: 500; margin-bottom: 10px; }
+    .landing-sub {
+      font-size: 0.84rem; color: var(--ink-faint); line-height: 1.5;
+      max-width: 320px; margin: 4px 0 18px;
+    }
+    .suggestions-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      width: 100%; max-width: 380px;
+    }
+    .suggestion-card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 12px; padding: 12px; text-align: left;
+      cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .suggestion-card:hover { background: var(--surface-2); border-color: var(--accent); }
+    .suggestion-card:active { transform: scale(0.97); }
+    .suggestion-card svg { width: 16px; height: 16px; color: var(--accent); }
+    .suggestion-card .s-title { font-size: 0.8rem; font-weight: 600; color: var(--ink); }
+    .suggestion-card .s-sub { font-size: 0.7rem; color: var(--ink-faint); line-height: 1.35; }
+    .landing-footnote {
+      margin-top: 18px; font-size: 0.66rem; color: var(--ink-faint);
+    }
+
+    .input-bar { flex-shrink: 0; padding: 10px 14px 16px; }
+    .input-pill {
+      display: flex; align-items: flex-end; gap: 6px;
+      background: var(--pill); border-radius: 26px; padding: 6px 6px 6px 16px;
+    }
+    textarea#userInput {
+      flex: 1; background: transparent; border: none; color: var(--ink);
+      font-family: 'IBM Plex Sans', sans-serif; font-size: 0.95rem;
+      outline: none; padding: 8px 0; resize: none;
+      max-height: 120px; line-height: 1.4;
+    }
+    textarea#userInput::placeholder { color: var(--ink-faint); }
+
+    .round-btn {
+      width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
       transition: background 0.15s, color 0.15s, transform 0.1s;
     }
-
-    .round-btn.ghost {
-      background: transparent;
-      color: var(--ink-soft);
-    }
+    .round-btn.ghost { background: transparent; color: var(--ink-soft); }
     .round-btn.ghost:hover { color: var(--ink); }
-
-    .round-btn.ghost.listening {
-      color: var(--error);
-      animation: pulse 1.4s ease-in-out infinite;
-    }
-
-    .round-btn.solid {
-      background: var(--accent);
-      color: #fff;
-    }
+    .round-btn.ghost:disabled { opacity: 0.35; cursor: default; }
+    .round-btn.ghost.listening { color: var(--error); animation: pulse 1.4s ease-in-out infinite; }
+    .round-btn.solid { background: var(--accent); color: #fff; }
     .round-btn.solid:hover { background: var(--accent-hover); }
     .round-btn.solid:active { transform: scale(0.94); }
-
+    .round-btn.stop { background: var(--surface-2); color: var(--ink); }
+    .round-btn.stop:hover { background: var(--line); }
     .round-btn svg { width: 18px; height: 18px; }
 
     @keyframes pulse {
@@ -310,11 +334,105 @@
       50% { box-shadow: 0 0 0 6px rgba(229,163,151,0.06); }
     }
 
-    .voice-note {
-      font-size: 0.68rem;
-      color: var(--ink-faint);
-      padding: 4px 16px 0;
+    .voice-note { font-size: 0.68rem; color: var(--ink-faint); padding: 4px 16px 0; }
+
+    /* sessions drawer */
+    .overlay {
+      position: absolute; inset: 0; background: var(--overlay);
+      opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 20;
     }
+    .overlay.open { opacity: 1; pointer-events: auto; }
+
+    .drawer {
+      position: absolute; top: 0; left: 0; height: 100%; width: 82%;
+      max-width: 320px; background: var(--surface);
+      border-right: 1px solid var(--line); z-index: 21;
+      transform: translateX(-102%); transition: transform 0.25s cubic-bezier(0.22,1,0.36,1);
+      display: flex; flex-direction: column;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 14px 10px;
+    }
+    .drawer-head h2 { font-size: 0.9rem; margin: 0; color: var(--ink); }
+    .drawer-search {
+      display: flex; align-items: center; gap: 8px; margin: 0 12px 10px;
+      padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .drawer-search svg { width: 14px; height: 14px; color: var(--ink-faint); flex-shrink: 0; }
+    .drawer-search input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--ink); font-family: inherit; font-size: 0.82rem;
+    }
+    .drawer-search input::placeholder { color: var(--ink-faint); }
+    .new-chat-btn {
+      display: flex; align-items: center; gap: 8px; margin: 0 12px 8px;
+      padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+      background: transparent; color: var(--ink); cursor: pointer;
+      font-family: inherit; font-size: 0.86rem; transition: background 0.15s;
+    }
+    .new-chat-btn:hover { background: var(--surface-2); }
+    .new-chat-btn svg { width: 16px; height: 16px; }
+    .section-label {
+      padding: 10px 14px 4px; font-size: 0.66rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--ink-faint);
+    }
+    .session-list { flex: 1; overflow-y: auto; padding: 4px 8px 12px; }
+    .session-list::-webkit-scrollbar { width: 5px; }
+    .session-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 6px; }
+    .session-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 10px; border-radius: 9px; cursor: pointer;
+      color: var(--ink-soft); transition: background 0.15s, color 0.15s;
+    }
+    .session-item:hover { background: var(--surface-2); color: var(--ink); }
+    .session-item.active { background: var(--surface-2); color: var(--ink); }
+    .session-item .title {
+      flex: 1; font-size: 0.85rem; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .session-item .pin-btn, .session-item .del {
+      width: 24px; height: 24px; border: none; background: transparent;
+      color: var(--ink-faint); border-radius: 6px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.15s, color 0.15s, background 0.15s;
+    }
+    .session-item .pin-btn.pinned { opacity: 1; color: var(--accent); }
+    .session-item:hover .pin-btn, .session-item:hover .del { opacity: 1; }
+    .session-item .del:hover { color: var(--error); background: var(--bg); }
+    .session-item .pin-btn:hover { color: var(--accent); background: var(--bg); }
+    .session-item .pin-btn svg, .session-item .del svg { width: 14px; height: 14px; }
+    .empty-note { padding: 20px 14px; color: var(--ink-faint); font-size: 0.82rem; text-align: center; }
+    .drawer-footer {
+      border-top: 1px solid var(--line); padding: 8px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .drawer-footer-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 10px; border-radius: 9px; border: none; background: transparent;
+      color: var(--ink-soft); cursor: pointer; font-family: inherit; font-size: 0.82rem;
+      text-align: left; transition: background 0.15s, color 0.15s;
+    }
+    .drawer-footer-btn:hover { background: var(--surface-2); color: var(--ink); }
+    .drawer-footer-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .temp-chat-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 10px; border-radius: 9px; color: var(--ink-soft); font-size: 0.82rem;
+    }
+    .switch {
+      position: relative; width: 34px; height: 19px; flex-shrink: 0;
+      background: var(--line); border-radius: 999px; border: none; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 15px; height: 15px; border-radius: 50%; background: var(--ink-soft);
+      transition: transform 0.15s, background 0.15s;
+    }
+    .switch.on { background: var(--accent); }
+    .switch.on::after { transform: translateX(15px); background: #fff; }
 
     @media (max-width: 500px) {
       .panel { max-width: 100%; height: 100vh; max-height: 100vh; border-radius: 0; }
@@ -324,24 +442,64 @@
 <body>
 
   <div class="panel">
+    <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+    <aside class="drawer" id="drawer" aria-label="Chat history">
+      <div class="drawer-head">
+        <h2>Chats</h2>
+        <button class="icon-btn" onclick="closeDrawer()" aria-label="Close chats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <button class="new-chat-btn" onclick="newChat()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        New chat
+      </button>
+      <div class="drawer-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="sessionSearch" placeholder="Search chats" oninput="renderSessions()">
+      </div>
+      <div class="temp-chat-row">
+        <span>Temporary chat</span>
+        <button class="switch" id="tempChatSwitch" onclick="toggleTempChat()" aria-label="Toggle temporary chat"></button>
+      </div>
+      <div class="session-list" id="sessionList"></div>
+      <div class="drawer-footer">
+        <button class="drawer-footer-btn" onclick="alert('Settings coming soon')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"></path></svg>
+          Settings & preferences
+        </button>
+        <div class="drawer-footer-btn" style="cursor:default; color: var(--ink-faint); font-size:0.72rem;">
+          Your history stays on this device
+        </div>
+      </div>
+    </aside>
+
     <header>
+      <div class="head-group">
+        <button class="icon-btn" onclick="openDrawer()" aria-label="Chat history" title="Chat history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+      </div>
       <span class="name">NYTO AI</span>
+      <div class="head-group">
+        <button class="icon-btn" onclick="newChat()" aria-label="New chat" title="New chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+        </button>
+        <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"></button>
+      </div>
     </header>
 
-    <div id="chatBox">
-      <div class="msg-row from-bot">
-        <div class="bubble">Hai! 👋<br>How are you doing? What are we working on today?</div>
-      </div>
-    </div>
+    <div id="chatBox" aria-live="polite"></div>
 
     <div class="input-bar">
       <div class="input-pill">
-        <input type="text" id="userInput" placeholder="Message NYTO AI…" onkeypress="if(event.key === 'Enter') sendMessage()" oninput="refreshSendButton()">
+        <textarea id="userInput" rows="1" placeholder="Message NYTO AI…" oninput="onInputChange()"></textarea>
         <button class="round-btn ghost" id="micBtn" onclick="toggleVoiceInput()" title="Speak your message" aria-label="Voice input">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="18" x2="12" y2="22"></line></svg>
         </button>
-        <button class="round-btn solid" id="sendBtn" onclick="sendMessage()" aria-label="Send">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        <button class="round-btn solid" id="sendBtn" onclick="onSendClick()" aria-label="Send">
+          <svg id="sendIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
         </button>
       </div>
       <div class="voice-note" id="voiceNote" style="display:none;">Voice input isn't supported in this browser — try Chrome on desktop or Android.</div>
@@ -349,184 +507,589 @@
   </div>
 
   <script>
-    // --- Voice input (speech-to-text only; nothing is sent until you press Send) ---
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognizer = null;
-    let isListening = false;
+    "use strict";
 
-    if (!SpeechRecognitionAPI) {
-      document.getElementById('micBtn').disabled = true;
-      document.getElementById('voiceNote').style.display = 'block';
-    } else {
-      recognizer = new SpeechRecognitionAPI();
-      recognizer.continuous = false;
-      recognizer.interimResults = true;
-      recognizer.lang = 'en-US';
+    // ============ Config ============
+    const PROXY_URL = "https://nytoai.ashwinmathew56.workers.dev";
+    const STORE_KEY = "nyto_sessions_v1";
+    const CURRENT_KEY = "nyto_current_v1";
+    const THEME_KEY = "nyto_theme_v1";
 
-      recognizer.onresult = (event) => {
-        let finalText = '';
-        let interimText = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalText += transcript;
-          else interimText += transcript;
-        }
-        document.getElementById('userInput').value = (finalText || interimText).trim();
-        refreshSendButton();
-      };
-
-      recognizer.onerror = () => stopListening();
-      recognizer.onend = () => stopListening();
-    }
-
-    function stopListening() {
-      isListening = false;
-      document.getElementById('micBtn').classList.remove('listening');
-    }
-
-    function toggleVoiceInput() {
-      if (!recognizer) return;
-      if (isListening) {
-        recognizer.stop();
-        stopListening();
-        return;
+    const SUGGESTIONS = [
+      {
+        icon: '<path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>',
+        title: 'Find the right words',
+        sub: 'Make a first draft that flows',
+        prompt: 'Help me draft '
+      },
+      {
+        icon: '<path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15 14a5 5 0 1 0-6 0c.6.6 1 1.5 1 2.5v.5h4v-.5c0-1 .4-1.9 1-2.5Z"></path>',
+        title: 'Think outside the box',
+        sub: 'A fresh take on your next idea',
+        prompt: 'Give me a creative, unconventional idea for '
+      },
+      {
+        icon: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"></path>',
+        title: 'Learn something new',
+        sub: 'Make the complex feel simple',
+        prompt: 'Explain, in simple terms, '
+      },
+      {
+        icon: '<polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline>',
+        title: 'Build something great',
+        sub: 'A little help with your code',
+        prompt: 'Help me build '
       }
-      document.getElementById('userInput').value = '';
-      isListening = true;
-      document.getElementById('micBtn').classList.add('listening');
-      recognizer.start();
+    ];
+
+    // ============ State ============
+    let sessions = [];        // [{ id, title, messages: [{role, content}], updatedAt, pinned }]
+    let currentId = null;
+    let activeController = null;   // AbortController for in-flight request
+    let isGenerating = false;
+    let revealTimer = null;
+    let tempChatMode = false;
+
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+
+    // ============ Storage ============
+    function loadState() {
+      try {
+        sessions = JSON.parse(localStorage.getItem(STORE_KEY)) || [];
+        currentId = localStorage.getItem(CURRENT_KEY);
+      } catch { sessions = []; currentId = null; }
+      if (!sessions.length) { createSession(); }
+      if (!sessions.find(s => s.id === currentId)) { currentId = sessions[0].id; }
+    }
+    function saveState() {
+      try {
+        if (tempChatMode) return; // don't persist temporary chats
+        localStorage.setItem(STORE_KEY, JSON.stringify(sessions));
+        localStorage.setItem(CURRENT_KEY, currentId);
+      } catch { /* storage full or blocked */ }
+    }
+    function currentSession() { return sessions.find(s => s.id === currentId); }
+
+    function createSession() {
+      const s = { id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), title: 'New chat', messages: [], updatedAt: Date.now(), pinned: false };
+      sessions.unshift(s);
+      currentId = s.id;
+      return s;
     }
 
-    function refreshSendButton() {
-      const hasText = document.getElementById('userInput').value.trim().length > 0;
-      document.getElementById('sendBtn').style.opacity = hasText ? '1' : '0.5';
+    function deriveTitle(text) {
+      const t = text.replace(/\s+/g, ' ').trim();
+      return t.length > 34 ? t.slice(0, 34) + '…' : (t || 'New chat');
+    }
+
+    // ============ Temporary chat ============
+    function toggleTempChat() {
+      tempChatMode = !tempChatMode;
+      document.getElementById('tempChatSwitch').classList.toggle('on', tempChatMode);
+      if (tempChatMode) {
+        // switch to a fresh, unsaved session
+        const s = { id: 'temp_' + Date.now(), title: 'Temporary chat', messages: [], updatedAt: Date.now(), pinned: false, temp: true };
+        sessions.unshift(s);
+        currentId = s.id;
+        renderMessages(); renderSessions();
+      }
+    }
+
+    // ============ Theme ============
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      const btn = document.getElementById('themeBtn');
+      btn.innerHTML = theme === 'light'
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path></svg>';
+    }
+    function toggleTheme() {
+      const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    }
+    (function initTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      const sys = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      applyTheme(saved || sys);
+    })();
+
+    // ============ Escaping / Markdown ============
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // very small keyword-based highlighter (works reasonably across C-like/py/js)
+    const KEYWORDS = new Set(("function return if else for while do switch case break continue " +
+      "const let var new class extends super this import from export default async await " +
+      "try catch finally throw typeof instanceof void delete in of yield static get set " +
+      "def elif except with as lambda pass raise None True False and or not is print " +
+      "public private protected void int float double string bool char null true false " +
+      "struct enum interface type implements package").split(" "));
+
+    function highlight(code) {
+      let out = '';
+      const re = /(\/\/[^\n]*|#[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\b\d[\d_.]*\b)|([A-Za-z_$][A-Za-z0-9_$]*)|([\s\S])/g;
+      let m;
+      while ((m = re.exec(code)) !== null) {
+        if (m[1]) out += '<span class="tok-com">' + escapeHtml(m[1]) + '</span>';
+        else if (m[2]) out += '<span class="tok-str">' + escapeHtml(m[2]) + '</span>';
+        else if (m[3]) out += '<span class="tok-num">' + escapeHtml(m[3]) + '</span>';
+        else if (m[4]) {
+          if (KEYWORDS.has(m[4])) out += '<span class="tok-key">' + m[4] + '</span>';
+          else {
+            const after = code.slice(re.lastIndex);
+            out += /^\s*\(/.test(after) ? '<span class="tok-fn">' + m[4] + '</span>' : escapeHtml(m[4]);
+          }
+        }
+        else out += escapeHtml(m[5]);
+      }
+      return out;
     }
 
     let codeBlockCounter = 0;
 
-    function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
     function formatText(rawText) {
-      let text = escapeHtml(rawText);
-
-      text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+      const codeStore = [];
+      let text = rawText.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
         codeBlockCounter++;
-        const id = `code-block-${codeBlockCounter}`;
+        const id = 'code-block-' + codeBlockCounter;
         const label = lang ? lang.trim() : 'code';
-        return `<div class="code-block">` +
-                 `<div class="code-header"><span>${label}</span>` +
-                 `<button class="copy-btn" onclick="copyCode('${id}', this)">Copy</button></div>` +
-                 `<pre><code id="${id}">${code.trim()}</code></pre>` +
-               `</div>`;
+        const html = '<div class="code-block">' +
+          '<div class="code-header"><span>' + escapeHtml(label) + '</span>' +
+          '<button class="copy-btn" onclick="copyCode(\'' + id + '\', this)">Copy</button></div>' +
+          '<pre><code id="' + id + '">' + highlight(code.replace(/\n$/, '')) + '</code></pre></div>';
+        codeStore.push(html);
+        return '\u0000CODE' + (codeStore.length - 1) + '\u0000';
       });
 
-      text = text.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
-      text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      text = text.replace(/\n/g, '<br>');
+      text = escapeHtml(text);
 
-      return text;
+      const lines = text.split('\n');
+      let html = '';
+      let listType = null;
+      const closeList = () => { if (listType) { html += '</' + listType + '>'; listType = null; } };
+
+      for (let raw of lines) {
+        const line = raw;
+        if (/^\u0000CODE\d+\u0000$/.test(line.trim())) { closeList(); html += line; continue; }
+        if (/^\s*---\s*$/.test(line)) { closeList(); html += '<hr>'; continue; }
+        let mm;
+        if ((mm = line.match(/^(#{1,3})\s+(.*)$/))) {
+          closeList(); const lvl = mm[1].length; html += '<h' + lvl + '>' + inline(mm[2]) + '</h' + lvl + '>'; continue;
+        }
+        if ((mm = line.match(/^\s*&gt;\s?(.*)$/))) {
+          closeList(); html += '<blockquote>' + inline(mm[1]) + '</blockquote>'; continue;
+        }
+        if ((mm = line.match(/^\s*[-*]\s+(.*)$/))) {
+          if (listType !== 'ul') { closeList(); html += '<ul>'; listType = 'ul'; }
+          html += '<li>' + inline(mm[1]) + '</li>'; continue;
+        }
+        if ((mm = line.match(/^\s*\d+\.\s+(.*)$/))) {
+          if (listType !== 'ol') { closeList(); html += '<ol>'; listType = 'ol'; }
+          html += '<li>' + inline(mm[1]) + '</li>'; continue;
+        }
+        if (line.trim() === '') { closeList(); continue; }
+        closeList();
+        html += '<p>' + inline(line) + '</p>';
+      }
+      closeList();
+
+      html = html.replace(/\u0000CODE(\d+)\u0000/g, (m, i) => codeStore[Number(i)]);
+      return html;
     }
 
+    function inline(s) {
+      s = s.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+      s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+      return s;
+    }
+
+    // ============ Copy / rating actions ============
     async function copyCode(id, btn) {
       const codeEl = document.getElementById(id);
       if (!codeEl) return;
       try {
         await navigator.clipboard.writeText(codeEl.textContent);
-        const original = btn.textContent;
-        btn.textContent = 'Copied';
-        btn.classList.add('copied');
-        setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1500);
-      } catch (err) {
-        btn.textContent = 'Failed';
-        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+        btn.textContent = 'Copied'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+      } catch { btn.textContent = 'Failed'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
+    }
+    async function copyMessage(btn) {
+      const text = btn.getAttribute('data-text') || '';
+      try { await navigator.clipboard.writeText(text); btn.classList.add('active'); setTimeout(() => btn.classList.remove('active'), 1200); } catch {}
+    }
+    function toggleRating(btn) {
+      const row = btn.closest('.actions');
+      row.querySelectorAll('[data-group="rate"]').forEach(b => { if (b !== btn) b.classList.remove('active'); });
+      btn.classList.toggle('active');
+    }
+    function regenerate() { if (!isGenerating) runRegenerate(); }
+
+    // ============ Rendering ============
+    function actionRowHtml(rawText, showRegen) {
+      const safe = escapeHtml(rawText).replace(/"/g, '&quot;');
+      return '<div class="actions">' +
+        '<button title="Copy" data-text="' + safe + '" onclick="copyMessage(this)">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+        '</button>' +
+        '<button title="Good response" data-group="rate" onclick="toggleRating(this)">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z"></path><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>' +
+        '</button>' +
+        '<button title="Bad response" data-group="rate" onclick="toggleRating(this)">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10Z"></path><path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>' +
+        '</button>' +
+        (showRegen ? '<button title="Regenerate" onclick="regenerate()">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><polyline points="21 3 21 9 15 9"></polyline></svg>' +
+        '</button>' : '') +
+      '</div>';
+    }
+
+    function landingHtml() {
+      const cards = SUGGESTIONS.map((c, i) =>
+        '<button class="suggestion-card" onclick="useSuggestion(' + i + ')">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + c.icon + '</svg>' +
+          '<span class="s-title">' + c.title + '</span>' +
+          '<span class="s-sub">' + c.sub + '</span>' +
+        '</button>'
+      ).join('');
+      return (
+        '<div class="landing">' +
+          '<div class="landing-logo">N</div>' +
+          '<div class="landing-kicker">A fresh start. A curious mind.</div>' +
+          '<h1 class="landing-title">A little curiosity.</h1>' +
+          '<h1 class="landing-title soft">Endless possibilities.</h1>' +
+          '<p class="landing-sub">Big ideas, small questions, or a blank page. Let\u2019s make something of it.</p>' +
+          '<div class="suggestions-grid">' + cards + '</div>' +
+          '<div class="landing-footnote">A starting point is all you need.</div>' +
+        '</div>'
+      );
+    }
+
+    function useSuggestion(i) {
+      const c = SUGGESTIONS[i];
+      userInput.value = c.prompt;
+      onInputChange();
+      userInput.focus();
+      // place cursor at the end
+      userInput.selectionStart = userInput.selectionEnd = userInput.value.length;
+    }
+
+    function renderMessages() {
+      const s = currentSession();
+      chatBox.innerHTML = '';
+      if (!s.messages.length) {
+        chatBox.insertAdjacentHTML('beforeend', landingHtml());
+        return;
+      }
+      s.messages.forEach((m, idx) => {
+        if (m.role === 'user') {
+          chatBox.insertAdjacentHTML('beforeend',
+            '<div class="msg-row from-user"><div class="bubble">' + escapeHtml(m.content).replace(/\n/g, '<br>') + '</div></div>');
+        } else {
+          const isLast = idx === s.messages.length - 1;
+          chatBox.insertAdjacentHTML('beforeend',
+            '<div class="msg-row from-bot"><div class="bubble">' + formatText(m.content) + '</div>' + actionRowHtml(m.content, isLast) + '</div>');
+        }
+      });
+      scrollToBottom();
+    }
+
+    function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
+
+    function renderSessions() {
+      const list = document.getElementById('sessionList');
+      const searchEl = document.getElementById('sessionSearch');
+      const q = (searchEl ? searchEl.value : '').trim().toLowerCase();
+      list.innerHTML = '';
+
+      const visible = sessions.filter(s => !s.temp && (!q || s.title.toLowerCase().includes(q)));
+      if (!visible.length) { list.innerHTML = '<div class="empty-note">No chats yet.</div>'; return; }
+
+      const pinned = visible.filter(s => s.pinned);
+      const rest = visible.filter(s => !s.pinned);
+
+      const renderGroup = (label, arr) => {
+        if (!arr.length) return;
+        if (label) {
+          const lab = document.createElement('div');
+          lab.className = 'section-label';
+          lab.textContent = label;
+          list.appendChild(lab);
+        }
+        arr.forEach(s => list.appendChild(sessionItemEl(s)));
+      };
+
+      renderGroup(pinned.length ? 'Pinned' : '', pinned);
+      renderGroup(pinned.length ? 'Chats' : '', rest);
+    }
+
+    function sessionItemEl(s) {
+      const el = document.createElement('div');
+      el.className = 'session-item' + (s.id === currentId ? ' active' : '');
+      el.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"></path></svg>' +
+        '<span class="title">' + escapeHtml(s.title) + '</span>' +
+        '<button class="pin-btn' + (s.pinned ? ' pinned' : '') + '" title="' + (s.pinned ? 'Unpin' : 'Pin') + '"><svg viewBox="0 0 24 24" fill="' + (s.pinned ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"></path><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1Z"></path></svg></button>' +
+        '<button class="del" title="Delete" aria-label="Delete chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>';
+      el.querySelector('.title').onclick = () => selectSession(s.id);
+      el.querySelector('svg').onclick = () => selectSession(s.id);
+      el.querySelector('.pin-btn').onclick = (e) => { e.stopPropagation(); togglePin(s.id); };
+      el.querySelector('.del').onclick = (e) => { e.stopPropagation(); deleteSession(s.id); };
+      return el;
+    }
+
+    function togglePin(id) {
+      const s = sessions.find(x => x.id === id);
+      if (s) s.pinned = !s.pinned;
+      saveState(); renderSessions();
+    }
+
+    // ============ Session actions ============
+    function selectSession(id) {
+      if (isGenerating) stopGenerating();
+      currentId = id; saveState(); renderMessages(); renderSessions(); closeDrawer();
+    }
+    function newChat() {
+      if (isGenerating) stopGenerating();
+      const empty = sessions.find(s => s.messages.length === 0 && !s.temp);
+      if (empty) { currentId = empty.id; } else { createSession(); }
+      saveState(); renderMessages(); renderSessions(); closeDrawer(); userInput.focus();
+    }
+    function deleteSession(id) {
+      sessions = sessions.filter(s => s.id !== id);
+      if (!sessions.length) createSession();
+      if (id === currentId) currentId = sessions[0].id;
+      saveState(); renderMessages(); renderSessions();
+    }
+
+    // ============ Drawer ============
+    function openDrawer() { renderSessions(); document.getElementById('drawer').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
+    function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+
+    // ============ Input ============
+    function onInputChange() {
+      userInput.style.height = 'auto';
+      userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+      const hasText = userInput.value.trim().length > 0;
+      if (!isGenerating) document.getElementById('sendBtn').style.opacity = hasText ? '1' : '0.6';
+    }
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.isComposing || e.nativeEvent?.isComposing || e.keyCode === 229) return;
+        e.preventDefault();
+        onSendClick();
+      }
+    });
+
+    function setSendMode(generating) {
+      isGenerating = generating;
+      const btn = document.getElementById('sendBtn');
+      const icon = document.getElementById('sendIcon');
+      if (generating) {
+        btn.classList.remove('solid'); btn.classList.add('stop');
+        btn.setAttribute('aria-label', 'Stop');
+        icon.outerHTML = '<svg id="sendIcon" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"></rect></svg>';
+      } else {
+        btn.classList.remove('stop'); btn.classList.add('solid');
+        btn.setAttribute('aria-label', 'Send');
+        const cur = document.getElementById('sendIcon');
+        cur.outerHTML = '<svg id="sendIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>';
       }
     }
 
-    async function copyMessage(btn, text) {
-      try {
-        await navigator.clipboard.writeText(text);
-        btn.classList.add('active');
-        setTimeout(() => btn.classList.remove('active'), 1200);
-      } catch (err) { /* clipboard unavailable */ }
+    function onSendClick() {
+      if (isGenerating) { stopGenerating(); return; }
+      sendMessage();
     }
 
-    function toggleRating(btn, group) {
-      const row = btn.closest('.actions');
-      row.querySelectorAll(`[data-group="${group}"]`).forEach(b => { if (b !== btn) b.classList.remove('active'); });
-      btn.classList.toggle('active');
+    function stopGenerating() {
+      if (activeController) { try { activeController.abort(); } catch {} activeController = null; }
+      if (revealTimer) { clearInterval(revealTimer); revealTimer = null; }
+      setSendMode(false);
     }
 
-    function buildActionRow(rawText) {
-      const safeText = rawText.replace(/'/g, "\\'").replace(/\n/g, '\\n');
-      return `<div class="actions">
-        <button title="Copy" onclick="copyMessage(this, '${safeText}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        </button>
-        <button title="Good response" data-group="rate" onclick="toggleRating(this, 'rate')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z"></path><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-        </button>
-        <button title="Bad response" data-group="rate" onclick="toggleRating(this, 'rate')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10Z"></path><path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>
-        </button>
-      </div>`;
+    // ============ Voice ============
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognizer = null, isListening = false;
+    if (!SpeechRecognitionAPI) {
+      document.getElementById('micBtn').disabled = true;
+      document.getElementById('voiceNote').style.display = 'block';
+    } else {
+      recognizer = new SpeechRecognitionAPI();
+      recognizer.continuous = false; recognizer.interimResults = true; recognizer.lang = 'en-US';
+      recognizer.onresult = (event) => {
+        let finalText = '', interimText = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const t = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += t; else interimText += t;
+        }
+        userInput.value = (finalText || interimText).trim();
+        onInputChange();
+      };
+      recognizer.onerror = () => stopListening();
+      recognizer.onend = () => stopListening();
+    }
+    function stopListening() { isListening = false; document.getElementById('micBtn').classList.remove('listening'); }
+    function toggleVoiceInput() {
+      if (!recognizer) return;
+      if (isListening) { recognizer.stop(); stopListening(); return; }
+      userInput.value = ''; isListening = true;
+      document.getElementById('micBtn').classList.add('listening');
+      recognizer.start();
     }
 
+    // ============ Send + stream/reveal ============
     async function sendMessage() {
-      const userInput = document.getElementById('userInput');
-      const chatBox = document.getElementById('chatBox');
       const messageText = userInput.value.trim();
+      if (!messageText || isGenerating) return;
 
-      if (!messageText) return;
+      const s = currentSession();
+      s.messages.push({ role: 'user', content: messageText });
+      if (s.title === 'New chat' || s.title === 'Temporary chat') s.title = deriveTitle(messageText);
+      s.updatedAt = Date.now();
+      saveState();
+
+      userInput.value = ''; onInputChange();
+      renderMessages(); renderSessions();
+
+      await requestReply(s);
+    }
+
+    async function runRegenerate() {
+      const s = currentSession();
+      while (s.messages.length && s.messages[s.messages.length - 1].role === 'assistant') s.messages.pop();
+      if (!s.messages.length) return;
+      saveState(); renderMessages();
+      await requestReply(s);
+    }
+
+    async function requestReply(s) {
+      setSendMode(true);
 
       chatBox.insertAdjacentHTML('beforeend',
-        `<div class="msg-row from-user"><div class="bubble">${escapeHtml(messageText).replace(/\n/g, '<br>')}</div></div>`);
-      userInput.value = '';
-      refreshSendButton();
+        '<div class="msg-row from-bot" id="loading"><div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>');
+      scrollToBottom();
 
-      chatBox.insertAdjacentHTML('beforeend',
-        `<div class="msg-row from-bot" id="loading"><div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      activeController = new AbortController();
+      const history = s.messages.map(m => ({ role: m.role, content: m.content }));
 
       try {
-        // Calls your Cloudflare Worker proxy — no API key lives in this file.
-        const PROXY_URL = "https://nytoai.ashwinmathew56.workers.dev";
-
         const response = await fetch(PROXY_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: messageText })
+          body: JSON.stringify({ message: s.messages[s.messages.length - 1].content, messages: history }),
+          signal: activeController.signal
         });
 
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
+        if (!response.ok) throw new Error('Request failed (' + response.status + ').');
 
-        if (data.text) {
-          let botText = data.text;
-          botText = botText.replace(/google/gi, "Nyto");
-          const formatted = formatText(botText);
+        const ctype = response.headers.get('content-type') || '';
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.remove();
 
-          const loadingEl = document.getElementById('loading');
-          if (loadingEl) loadingEl.remove();
-          chatBox.insertAdjacentHTML('beforeend',
-            `<div class="msg-row from-bot"><div class="bubble">${formatted}</div>${buildActionRow(botText)}</div>`);
+        const row = document.createElement('div');
+        row.className = 'msg-row from-bot';
+        row.innerHTML = '<div class="bubble cursor-blink"></div>';
+        chatBox.appendChild(row);
+        const bubble = row.querySelector('.bubble');
+
+        let full = '';
+        const paint = () => { bubble.innerHTML = formatText(cleanse(full)); };
+
+        if (response.body && (ctype.includes('text/event-stream') || ctype.includes('text/plain') || ctype.includes('application/x-ndjson'))) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            full += extractChunk(chunk);
+            paint(); scrollToBottom();
+          }
+          finalizeBubble(row, bubble, s, cleanse(full));
         } else {
-          throw new Error("Invalid response format received from API.");
+          const data = await response.json();
+          if (data.error) throw new Error(data.error);
+          const text = data.text ?? data.response ?? data.message ?? '';
+          if (!text) throw new Error('Invalid response format received from API.');
+          await revealText(text, bubble, row, s);
         }
-
       } catch (error) {
         const loadingEl = document.getElementById('loading');
         if (loadingEl) loadingEl.remove();
-        chatBox.insertAdjacentHTML('beforeend',
-          `<div class="msg-row is-error"><div class="bubble">${escapeHtml(error.message)}</div></div>`);
-        console.error(error);
+        if (error.name === 'AbortError') {
+          const rows = chatBox.querySelectorAll('.msg-row.from-bot .bubble.cursor-blink');
+          rows.forEach(b => b.classList.remove('cursor-blink'));
+        } else {
+          chatBox.insertAdjacentHTML('beforeend',
+            '<div class="msg-row is-error"><div class="bubble">' + escapeHtml(error.message) + '</div></div>');
+        }
+        console.error('[NYTO]', error);
+      } finally {
+        activeController = null;
+        setSendMode(false);
+        scrollToBottom();
       }
-
-      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    refreshSendButton();
+    function cleanse(t) { return t.replace(/google/gi, 'Nyto'); }
+
+    function extractChunk(chunk) {
+      let out = '';
+      const lines = chunk.split('\n');
+      let sawData = false;
+      for (const line of lines) {
+        const l = line.trim();
+        if (l.startsWith('data:')) {
+          sawData = true;
+          const payload = l.slice(5).trim();
+          if (payload === '[DONE]' || !payload) continue;
+          try { const j = JSON.parse(payload); out += (j.text ?? j.response ?? j.delta ?? j.content ?? ''); }
+          catch { out += payload; }
+        }
+      }
+      return sawData ? out : chunk;
+    }
+
+    function finalizeBubble(row, bubble, s, text) {
+      bubble.classList.remove('cursor-blink');
+      bubble.innerHTML = formatText(text);
+      s.messages.push({ role: 'assistant', content: text });
+      s.updatedAt = Date.now();
+      saveState();
+      row.insertAdjacentHTML('beforeend', actionRowHtml(text, true));
+      renderSessions();
+    }
+
+    function revealText(text, bubble, row, s) {
+      return new Promise((resolve) => {
+        const clean = cleanse(text);
+        const tokens = clean.match(/\S+\s*|\s+/g) || [clean];
+        let i = 0, shown = '';
+        revealTimer = setInterval(() => {
+          if (i >= tokens.length) {
+            clearInterval(revealTimer); revealTimer = null;
+            finalizeBubble(row, bubble, s, clean);
+            resolve();
+            return;
+          }
+          shown += tokens[i++];
+          bubble.innerHTML = formatText(shown);
+          scrollToBottom();
+        }, 18);
+      });
+    }
+
+    // ============ Init ============
+    loadState();
+    renderMessages();
+    renderSessions();
+    onInputChange();
   </script>
 
 </body>
