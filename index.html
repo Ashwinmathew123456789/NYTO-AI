@@ -3,19 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Correspondence</title>
+  <title>NYTO AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --paper: #efe8d8;
-      --paper-dark: #e4dabd;
-      --ink: #26241f;
-      --ink-soft: #6b6455;
-      --rule: #c9bd9c;
-      --stamp: #a23b2e;
-      --stamp-soft: #c96a58;
-      --error: #8b2c1f;
+      --bg: #eef0f3;
+      --panel: #ffffff;
+      --ink: #191d24;
+      --ink-soft: #626b79;
+      --ink-faint: #9aa2ad;
+      --line: #dde1e7;
+      --line-strong: #c3c9d2;
+      --accent: #33508f;
+      --accent-hover: #294178;
+      --accent-tint: #e9edf7;
+      --error: #a3402f;
+      --error-tint: #f7e9e6;
+      --code-bg: #191d24;
+      --code-fg: #e4e7ec;
+      --code-header: #262b34;
+      --radius: 3px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --panel: #1b1e25;
+        --ink: #e7e9ed;
+        --ink-soft: #9aa2ad;
+        --ink-faint: #6b7280;
+        --line: #2a2e37;
+        --line-strong: #3a3f4a;
+        --accent: #6d8fd6;
+        --accent-hover: #7fa0e3;
+        --accent-tint: #232a3d;
+        --error: #e08a78;
+        --error-tint: #33221f;
+        --code-bg: #0d0e12;
+        --code-fg: #e4e7ec;
+        --code-header: #1a1c22;
+      }
+
+      button.send-btn { color: #101218; }
+      .msg.from-user { color: #101218; }
     }
 
     * { box-sizing: border-box; }
@@ -26,176 +58,384 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: var(--paper-dark);
-      background-image:
-        radial-gradient(circle at 15% 20%, rgba(38,36,31,0.03) 0, transparent 45%),
-        radial-gradient(circle at 85% 80%, rgba(38,36,31,0.04) 0, transparent 45%);
-      font-family: 'Source Serif 4', Georgia, serif;
+      background: var(--bg);
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
       color: var(--ink);
     }
 
-    .sheet {
+    .panel {
       width: 100%;
       max-width: 460px;
-      background: var(--paper);
-      border: 1px solid var(--rule);
-      box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px rgba(38,36,31,0.18);
-      position: relative;
-    }
-
-    .sheet::before {
-      content: "";
-      position: absolute;
-      top: -1px; left: 0; right: 0;
-      height: 6px;
-      background-image: radial-gradient(circle, var(--paper-dark) 2.5px, transparent 2.6px);
-      background-size: 16px 6px;
-      background-repeat: repeat-x;
-      background-position: 6px center;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: 0 12px 32px rgba(25, 29, 36, 0.10);
+      display: flex;
+      flex-direction: column;
     }
 
     header {
-      padding: 22px 28px 16px;
-      border-bottom: 1px solid var(--rule);
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line);
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
     }
 
-    header .title {
-      font-size: 1.25rem;
+    header .name {
+      font-size: 0.98rem;
       font-weight: 600;
-      letter-spacing: 0.01em;
+      letter-spacing: -0.01em;
     }
 
-    header .stamp {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--stamp);
-      border: 1px solid var(--stamp-soft);
-      padding: 3px 7px;
-      border-radius: 2px;
-      transform: rotate(-3deg);
-      letter-spacing: 0.06em;
+    header .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: var(--ink-soft);
+    }
+
+    header .status .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #2e8b57;
     }
 
     #chatBox {
       height: 380px;
       overflow-y: auto;
-      padding: 22px 28px;
+      padding: 20px 24px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      background-image: repeating-linear-gradient(
-        to bottom,
-        transparent,
-        transparent 30px,
-        var(--rule) 31px
-      );
-      background-position: 0 8px;
+      gap: 14px;
     }
 
     #chatBox::-webkit-scrollbar { width: 6px; }
     #chatBox::-webkit-scrollbar-track { background: transparent; }
-    #chatBox::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 6px; }
+    #chatBox::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 6px; }
 
-    p {
-      margin: 0;
-      font-size: 0.98rem;
+    .msg {
+      max-width: 82%;
+      font-size: 0.93rem;
       line-height: 1.5;
-      word-wrap: break-word;
+      padding: 9px 13px;
+      border-radius: 14px;
     }
 
-    p b {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.68rem;
+    .msg .who {
+      font-size: 0.66rem;
       font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      display: block;
       margin-bottom: 3px;
+      opacity: 0.75;
     }
 
-    p.user-msg { color: var(--ink); }
-    p.user-msg b { color: var(--ink-soft); }
+    .msg.from-user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
 
-    p.bot-msg { color: var(--ink); padding-left: 14px; border-left: 2px solid var(--stamp-soft); }
-    p.bot-msg b { color: var(--stamp); }
+    .msg.from-bot {
+      align-self: flex-start;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      border-bottom-left-radius: 4px;
+    }
 
-    p.error-msg {
-      padding-left: 14px;
-      border-left: 2px solid var(--error);
+    .msg.from-bot .who { color: var(--accent); opacity: 1; }
+
+    .msg.is-error {
+      align-self: flex-start;
+      background: var(--error-tint);
+      border: 1px solid var(--error);
       color: var(--error);
-      font-style: italic;
+      border-bottom-left-radius: 4px;
     }
-    p.error-msg b { color: var(--error); }
 
-    #loading b { color: var(--stamp); }
-    #loading { opacity: 0.65; }
+    .msg.is-error .who { color: var(--error); opacity: 1; }
+
+    /* code blocks sit inside a bot bubble, so give them their own contrast frame */
+    .msg.from-bot .code-block,
+    .msg.is-error .code-block {
+      margin: 6px -13px;
+    }
+    .msg.from-bot .code-block:first-child,
+    .msg.is-error .code-block:first-child { margin-top: 2px; }
+
+    #loading .who { color: var(--accent); }
+    #loading { opacity: 0.6; }
+
+    code.inline-code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85em;
+      background: var(--accent-tint);
+      border-radius: 3px;
+      padding: 1px 5px;
+    }
+
+    .code-block {
+      margin: 8px 0;
+      border-radius: 5px;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--code-header);
+      padding: 6px 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.66rem;
+      color: var(--ink-faint);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid #454c59;
+      color: var(--code-fg);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.64rem;
+      padding: 3px 9px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .copy-btn:hover { border-color: var(--accent); background: rgba(51,80,143,0.25); }
+    .copy-btn.copied { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .code-block pre {
+      margin: 0;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      padding: 12px;
+      overflow-x: auto;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
 
     .input-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 16px 24px 20px;
-      border-top: 1px solid var(--rule);
+      gap: 8px;
+      padding: 14px 20px 18px;
+      border-top: 1px solid var(--line);
     }
 
     input[type="text"] {
       flex: 1;
       padding: 10px 12px;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid var(--rule);
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 4px;
       color: var(--ink);
-      font-family: 'Source Serif 4', Georgia, serif;
-      font-size: 0.98rem;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.92rem;
       outline: none;
+      transition: border-color 0.15s;
     }
 
-    input[type="text"]::placeholder { color: var(--ink-soft); font-style: italic; }
-    input[type="text"]:focus { border-bottom-color: var(--stamp); }
+    input[type="text"]::placeholder { color: var(--ink-faint); }
+    input[type="text"]:focus { border-color: var(--accent); }
 
-    button {
-      padding: 10px 18px;
-      background: var(--ink);
+    button.send-btn {
+      padding: 10px 16px;
+      background: var(--accent);
       border: none;
-      color: var(--paper);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
+      border-radius: 4px;
+      color: #fff;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.86rem;
+      font-weight: 500;
       cursor: pointer;
       transition: background 0.15s;
     }
 
-    button:hover { background: var(--stamp); }
-    button:active { transform: translateY(1px); }
+    button.send-btn:hover { background: var(--accent-hover); }
+    button.send-btn:active { transform: translateY(1px); }
+
+    button.mic-btn {
+      width: 38px;
+      height: 38px;
+      flex-shrink: 0;
+      padding: 0;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+
+    button.mic-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    button.mic-btn.listening {
+      background: var(--error-tint);
+      border-color: var(--error);
+      color: var(--error);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    button.mic-btn svg { width: 17px; height: 17px; }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(163,64,47,0.25); }
+      50% { box-shadow: 0 0 0 5px rgba(163,64,47,0.05); }
+    }
+
+    .voice-note {
+      font-size: 0.68rem;
+      color: var(--ink-faint);
+      padding: 0 20px 12px;
+      margin-top: -8px;
+    }
 
     @media (max-width: 500px) {
-      .sheet { max-width: 100%; margin: 0 10px; }
+      .panel { max-width: 100%; margin: 0 10px; border-radius: 0; height: 100vh; }
+      #chatBox { height: auto; flex: 1; }
     }
   </style>
 </head>
 <body>
 
-  <div class="sheet">
+  <div class="panel">
     <header>
-      <span class="title">NYTO AI</span>
-      <span class="stamp">NYTO AI</span>
+      <span class="name">NYTO AI</span>
+      <span class="status"><span class="dot"></span>Ready</span>
     </header>
 
     <div id="chatBox">
-      <p class="bot-msg"><b>NYTO AI</b>Hello! Type your message below and chat.</p>
+      <div class="msg from-bot"><div class="who">NYTO AI</div>Hello. Type a message below to get started.</div>
     </div>
 
     <div class="input-row">
-      <input type="text" id="userInput" placeholder="write here..." onkeypress="if(event.key === 'Enter') sendMessage()">
-      <button onclick="sendMessage()">Send</button>
+      <input type="text" id="userInput" placeholder="Write a message…" onkeypress="if(event.key === 'Enter') sendMessage()">
+      <button class="mic-btn" id="micBtn" onclick="toggleVoiceInput()" title="Speak your message" aria-label="Voice input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+          <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
+          <line x1="12" y1="18" x2="12" y2="22"></line>
+        </svg>
+      </button>
+      <button class="send-btn" onclick="sendMessage()">Send</button>
     </div>
+    <div class="voice-note" id="voiceNote" style="display:none;">Voice input isn't supported in this browser — try Chrome on desktop or Android.</div>
   </div>
 
   <script>
+    // --- Voice input (speech-to-text only; nothing is sent until you press Send) ---
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognizer = null;
+    let isListening = false;
+
+    if (!SpeechRecognitionAPI) {
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('micBtn').disabled = true;
+        document.getElementById('voiceNote').style.display = 'block';
+      });
+    } else {
+      recognizer = new SpeechRecognitionAPI();
+      recognizer.continuous = false;
+      recognizer.interimResults = true;
+      recognizer.lang = 'en-US';
+
+      recognizer.onresult = (event) => {
+        let finalText = '';
+        let interimText = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += transcript;
+          else interimText += transcript;
+        }
+        const input = document.getElementById('userInput');
+        input.value = (finalText || interimText).trim();
+      };
+
+      recognizer.onerror = () => stopListening();
+      recognizer.onend = () => stopListening();
+    }
+
+    function stopListening() {
+      isListening = false;
+      document.getElementById('micBtn').classList.remove('listening');
+    }
+
+    function toggleVoiceInput() {
+      if (!recognizer) return;
+      if (isListening) {
+        recognizer.stop();
+        stopListening();
+        return;
+      }
+      document.getElementById('userInput').value = '';
+      isListening = true;
+      document.getElementById('micBtn').classList.add('listening');
+      recognizer.start();
+    }
+
+    let codeBlockCounter = 0;
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // Turns plain/markdown-ish text into formatted HTML:
+    // ```lang\ncode``` -> code block with copy button
+    // `code` -> inline code
+    // **bold** -> <strong>
+    // \n -> <br>
+    function formatText(rawText) {
+      let text = escapeHtml(rawText);
+
+      text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+        codeBlockCounter++;
+        const id = `code-block-${codeBlockCounter}`;
+        const label = lang ? lang.trim() : 'code';
+        return `<div class="code-block">` +
+                 `<div class="code-header"><span>${label}</span>` +
+                 `<button class="copy-btn" onclick="copyCode('${id}', this)">Copy</button></div>` +
+                 `<pre><code id="${id}">${code.trim()}</code></pre>` +
+               `</div>`;
+      });
+
+      text = text.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+      text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      text = text.replace(/\n/g, '<br>');
+
+      return text;
+    }
+
+    async function copyCode(id, btn) {
+      const codeEl = document.getElementById(id);
+      if (!codeEl) return;
+      try {
+        await navigator.clipboard.writeText(codeEl.textContent);
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1500);
+      } catch (err) {
+        btn.textContent = 'Failed';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+      }
+    }
+
     async function sendMessage() {
       const userInput = document.getElementById('userInput');
       const chatBox = document.getElementById('chatBox');
@@ -203,10 +443,12 @@
 
       if (!messageText) return;
 
-      chatBox.innerHTML += `<p class="user-msg"><b>You:</b> ${messageText}</p>`;
+      chatBox.insertAdjacentHTML('beforeend',
+        `<div class="msg from-user"><div class="who">You</div>${escapeHtml(messageText).replace(/\n/g, '<br>')}</div>`);
       userInput.value = '';
 
-      chatBox.innerHTML += `<p id="loading" class="bot-msg"><b>NITO AI:</b> Thinking...</p>`;
+      chatBox.insertAdjacentHTML('beforeend',
+        `<div class="msg from-bot" id="loading"><div class="who">NYTO AI</div>Thinking…</div>`);
       chatBox.scrollTop = chatBox.scrollHeight;
 
       try {
@@ -215,31 +457,32 @@
 
         const response = await fetch(PROXY_URL, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: messageText })
         });
 
         const data = await response.json();
 
-        if (data.error) {
-          throw new Error(data.error);
-        }
+        if (data.error) throw new Error(data.error);
 
         if (data.text) {
           let botText = data.text;
           botText = botText.replace(/google/gi, "Nyto");
+          const formatted = formatText(botText);
 
-          if (document.getElementById('loading')) document.getElementById('loading').remove();
-          chatBox.innerHTML += `<p class="bot-msg"><b>NYTO AI:</b> ${botText}</p>`;
+          const loadingEl = document.getElementById('loading');
+          if (loadingEl) loadingEl.remove();
+          chatBox.insertAdjacentHTML('beforeend',
+            `<div class="msg from-bot"><div class="who">NYTO AI</div>${formatted}</div>`);
         } else {
           throw new Error("Invalid response format received from API.");
         }
 
       } catch (error) {
-        if (document.getElementById('loading')) document.getElementById('loading').remove();
-        chatBox.innerHTML += `<p class="error-msg"><b>Error:</b> ${error.message}</p>`;
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.remove();
+        chatBox.insertAdjacentHTML('beforeend',
+          `<div class="msg is-error"><div class="who">Error</div>${escapeHtml(error.message)}</div>`);
         console.error(error);
       }
 
